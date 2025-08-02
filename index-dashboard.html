@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Broker</title>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+<div class="bg-white shadow-md rounded-lg p-6 w-full max-w-md space-y-4">
+    <h1 class="text-2xl font-bold text-gray-800">
+        Live Stock Dashboard
+    </h1>
+
+    <div>
+        <label class="text-gray-600 font-semibold">Stock Price:</label>
+        <div id="stock_price" class="mt-1 p-2 bg-gray-100 rounded text-blue-600">
+            This is the stock price -- this will get changed
+        </div>
+    </div>
+
+    <div>
+        <label for="msg" class="text-gray-600 font-semibold">Enter Symbol:</label>
+        <div class="flex space-x-2 mt-1">
+            <input
+                    id="msg"
+                    class="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="e.g., AAPL"
+            />
+            <button id="sendBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                Send
+            </button>
+        </div>
+    </div>
+
+    <div>
+        <label class="text-gray-600 font-semibold">Watchlist:</label>
+        <div id="watchlist" class="mt-1 p-2 bg-gray-100 rounded text-green-600">
+            TBD
+        </div>
+    </div>
+
+    <div>
+        <label class="text-gray-600 font-semibold">Connections:</label>
+        <div id="connections" class="mt-1 p-2 bg-gray-100 rounded text-purple-600">
+            Loading...
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import {initBrokerJavascript} from "./broker.js";
+
+    const broker = initBrokerJavascript();
+
+    document.getElementById("sendBtn").onclick = () => {
+        const msg = document.getElementById("msg").value;
+        broker.send("stock_price", msg);
+    };
+
+    broker.onMessage((topic, value) => {
+        console.log("Received:", topic, value);
+    });
+</script>
+</body>
+</html>

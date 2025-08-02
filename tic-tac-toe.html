@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Tic Tac Toe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<div class="text-center space-y-4">
+    <h1 class="text-3xl font-bold text-gray-800">Tic Tac Toe</h1>
+    <h2 id="gameId"></h2>
+
+    <div class="space-y-2">
+        <input id="gameIdInput" type="text" placeholder="Enter game ID or leave blank for new"
+               class="border px-3 py-2 rounded w-64" />
+        <button id="connectBtn"
+                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Connect</button>
+    </div>
+
+    <div id="board" class="grid grid-cols-3 gap-2 w-64 mx-auto mt-4">
+        <!-- Cells populated via JS -->
+    </div>
+    <div id="status" class="text-lg font-semibold text-gray-700">Waiting to join game...</div>
+    <button id="reset" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 hidden">
+        Start Game
+    </button>
+</div>
+
+<script type="module">
+    import { initBrokerJavascript } from "./broker.js";
+
+    const broker = initBrokerJavascript();
+
+    const board = document.getElementById("board");
+    const status = document.getElementById("status");
+    const resetButton = document.getElementById("reset");
+    const gameIdInput = document.getElementById("gameIdInput");
+    const connectBtn = document.getElementById("connectBtn");
+    const gameIdText = document.getElementById("gameId");
+
+    let currentPlayer = "X";
+    let cells = Array(9).fill(null);
+    let winner = "";
+    let gameState = -1;
+    let gameId = "";
+
+    connectBtn.onclick = () => {
+        const userInput = gameIdInput.value.trim();
+        gameId = userInput || crypto.randomUUID().substring(0, 4).toUpperCase();
+        broker.send("start", gameId);
+        resetButton.classList.remove("hidden");
+    };
+
+    broker.onMessage((topic, value) => {
+        console.log("Received:", topic, value);
+        if (topic === "start" || topic === "move") {
+            updateStatus(value);
+            render();
+        }
+        if (topic === "update") {
+            const parts = value.split(",");
+            if (parts[0] !== gameId) {
+                console.log("not worrying about message with game id: " + parts[0]);
+            } else {
+                console.log("i have to handle this update");
+                updateStatus(value.split(",").slice(1).join(","));
+                render();
+            }
+        }
+    });
+
+    function updateStatus(input) {
+        const elements = input.split(",");
+        cells = elements.slice(0, 9);
+        currentPlayer = elements[9];
+        winner = elements[10];
+        gameState = parseInt(elements[11]);
+
+        if (gameState === 0) {
+            status.textContent = "Waiting to start...";
+        } else if (winner === "?") {
+            status.textContent = `Player ${currentPlayer}'s turn`;
+        } else if (winner === "T") {
+            status.textContent = `It was a tie!`;
+        } else {
+            status.textContent = `Player ${winner} wins!`;
+        }
+    }
+
+    function handleClick(index) {
+        if (!gameId) {
+            alert("You must connect to a game first.");
+            return;
+        }
+        broker.send("move", `${gameId},${currentPlayer}${index + 1}`); // +1 for 1-based position
+    }
+
+    function render() {
+        gameIdText.textContent = gameId;
+        board.innerHTML = "";
+        cells.forEach((value, i) => {
+            const cell = document.createElement("div");
+            cell.className =
+                "bg-white w-20 h-20 flex items-center justify-center text-2xl font-bold rounded shadow cursor-pointer hover:bg-gray-100";
+            cell.textContent = value === "-" ? "" : value;
+            cell.onclick = () => handleClick(i);
+            board.appendChild(cell);
+        });
+
+        if (gameState === 2) {
+            resetButton.innerText = "Start New Game";
+        } else {
+            resetButton.innerText = "Reset Game";
+        }
+    }
+
+    resetButton.onclick = () => {
+        if (!gameId) {
+            alert("Connect to a game first.");
+            return;
+        }
+        broker.send("start", gameId);
+    };
+</script>
+</body>
+</html>
