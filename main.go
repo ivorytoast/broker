@@ -16,12 +16,26 @@ import (
 //go:embed tic-tac-toe.html broker.js index-dashboard.html
 var staticFiles embed.FS
 
+var serverType string    // Will be set via -ldflags
+var polygonApiKey string // Will be set via -ldflags
+
 var (
 	games   = make(map[string]*tictactoe.Game)
 	gameMux sync.Mutex
 )
 
 func main() {
+	if serverType != "prod" {
+		serverType = "local"
+	}
+
+	if polygonApiKey == "" {
+		// polygonApiKey = ""
+		panic("You must provide a Polygon API Key for development via flags or hard coded here")
+	}
+
+	InitPolygonClient(polygonApiKey)
+
 	ticker := time.NewTicker(2 * time.Second)
 	connections := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
@@ -31,17 +45,15 @@ func main() {
 		"stock_price": stockPriceHandler,
 		"watchlist":   watchListHandler,
 		"connections": connectionsHandler,
-
-		"start": startHandler,
-		"move":  playerMoveHandler,
+		"start":       startHandler,
+		"move":        playerMoveHandler,
 	}
-
 	e := engine.New(eventMap)
 
 	go runWatchlist(ticker, e)
 	go runGetConnections(connections, e)
 
-	// Create a new HTTP server that serves both static files and WebSocket
+	// Create a new HTTP server
 	mux := http.NewServeMux()
 
 	// Serve static files
@@ -50,16 +62,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Serve the main tic-tac-toe game at root
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
-			// Just print hello from backend
 			w.Header().Set("Content-Type", "text/plain")
 			w.Write([]byte("Hello from backend!"))
 			return
 		}
 		if r.URL.Path == "/tictactoe" {
-			// Serve tic-tac-toe HTML content directly
 			content, err := staticFiles.ReadFile("tic-tac-toe.html")
 			if err != nil {
 				http.Error(w, "Tic-tac-toe game not found", http.StatusNotFound)
@@ -69,11 +78,9 @@ func main() {
 			w.Write(content)
 			return
 		}
-		// Serve other static files
 		http.FileServer(http.FS(staticFS)).ServeHTTP(w, r)
 	})
 
-	// Serve dashboard at /dashboard
 	mux.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
 		content, err := staticFiles.ReadFile("index-dashboard.html")
 		if err != nil {
@@ -84,21 +91,24 @@ func main() {
 		w.Write(content)
 	})
 
-	// Serve WebSocket connections
 	mux.HandleFunc("/ws", e.Handler)
 
-	log.Printf("Server starting with HTTPS on :443")
-	log.Printf("Using manual certificates from Let's Encrypt")
-	log.Printf("Tic-tac-toe game: https://chalkedup.io:443/tictactoe")
-	log.Printf("Dashboard: https://chalkedup.io:443/dashboard")
-	log.Printf("WebSocket endpoint: wss://chalkedup.io:443/ws")
-
-	// Start HTTPS server with manual certificates
-	if err := http.ListenAndServeTLS(":443",
-		"/etc/letsencrypt/live/chalkedup.io/fullchain.pem",
-		"/etc/letsencrypt/live/chalkedup.io/privkey.pem",
-		mux); err != nil {
-		log.Fatal("HTTPS server error: ", err)
+	if serverType == "local" {
+		log.Printf("Starting LOCAL server on :8080")
+		if err := http.ListenAndServe(":8080", mux); err != nil {
+			log.Fatal("HTTP server error: ", err)
+		}
+	} else if serverType == "prod" {
+		log.Printf("Starting PROD server with HTTPS on :443")
+		log.Printf("Tic-tac-toe game: https://chalkedup.io:443/tictactoe")
+		log.Printf("Dashboard: https://chalkedup.io:443/dashboard")
+		log.Printf("WebSocket: wss://chalkedup.io:443/ws")
+		if err := http.ListenAndServeTLS(":443",
+			"/etc/letsencrypt/live/chalkedup.io/fullchain.pem",
+			"/etc/letsencrypt/live/chalkedup.io/privkey.pem",
+			mux); err != nil {
+			log.Fatal("HTTPS server error: ", err)
+		}
 	}
 }
 

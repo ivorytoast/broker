@@ -10,9 +10,20 @@ import (
 	"time"
 )
 
-var polygonClient = polygon.New("CB5AT7hxHvnrSnGkOH6ue0BIjN9s9k7g")
+var (
+	polygonClient *polygon.Client
+)
+
+func InitPolygonClient(apiKey string) {
+	polygonApiKey = apiKey
+	polygonClient = polygon.New(apiKey)
+}
 
 func runPolygonRequest(symbol string) (*models.GetDailyOpenCloseAggResponse, error) {
+	if polygonClient == nil {
+		return nil, fmt.Errorf("polygon client not initialized")
+	}
+
 	on := time.Now().AddDate(0, 0, -2)
 
 	params := models.GetDailyOpenCloseAggParams{
