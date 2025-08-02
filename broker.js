@@ -8,6 +8,8 @@ export function initBrokerJavascript(wsUrl = null) {
         wsUrl = `${protocol}//${window.location.host}/ws`;
     }
     
+    console.log("using wsURL: " + wsUrl);
+    
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

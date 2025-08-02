@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -87,12 +88,22 @@ func main() {
 	// Serve WebSocket connections
 	mux.HandleFunc("/ws", e.Handler)
 
-	log.Printf("Server starting on :8080")
-	log.Printf("Tic-tac-toe game: http://localhost:8080/tictactoe")
-	log.Printf("Dashboard: http://localhost:8080/dashboard")
-	log.Printf("WebSocket endpoint: ws://localhost:8080/ws")
+	// Create a listener to get the actual address
+	listener, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	addr := listener.Addr().(*net.TCPAddr)
+	port := addr.Port
+
+	log.Printf("Listening on addr: %v", addr)
+	log.Printf("Server starting on port %d", port)
+	log.Printf("Tic-tac-toe game: /tictactoe")
+	log.Printf("Dashboard: /dashboard")
+	log.Printf("WebSocket endpoint: /ws")
+
+	if err := http.Serve(listener, mux); err != nil {
 		log.Fatal(err)
 	}
 }
