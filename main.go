@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
-	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -88,23 +87,18 @@ func main() {
 	// Serve WebSocket connections
 	mux.HandleFunc("/ws", e.Handler)
 
-	// Create a listener to get the actual address
-	listener, err := net.Listen("tcp", ":8080")
-	if err != nil {
-		log.Fatal(err)
-	}
+	log.Printf("Server starting with HTTPS on :443")
+	log.Printf("Using manual certificates from Let's Encrypt")
+	log.Printf("Tic-tac-toe game: https://chalkedup.io:443/tictactoe")
+	log.Printf("Dashboard: https://chalkedup.io:443/dashboard")
+	log.Printf("WebSocket endpoint: wss://chalkedup.io:443/ws")
 
-	addr := listener.Addr().(*net.TCPAddr)
-	port := addr.Port
-
-	log.Printf("Listening on addr: %v", addr)
-	log.Printf("Server starting on port %d", port)
-	log.Printf("Tic-tac-toe game: /tictactoe")
-	log.Printf("Dashboard: /dashboard")
-	log.Printf("WebSocket endpoint: /ws")
-
-	if err := http.Serve(listener, mux); err != nil {
-		log.Fatal(err)
+	// Start HTTPS server with manual certificates
+	if err := http.ListenAndServeTLS(":443",
+		"/etc/letsencrypt/live/chalkedup.io/fullchain.pem",
+		"/etc/letsencrypt/live/chalkedup.io/privkey.pem",
+		mux); err != nil {
+		log.Fatal("HTTPS server error: ", err)
 	}
 }
 

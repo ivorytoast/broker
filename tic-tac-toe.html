@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic Tac Toe</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-<div class="text-center space-y-4">
-    <h1 class="text-3xl font-bold text-gray-800">Tic Tac Toe</h1>
-    <h2 id="gameId"></h2>
+<body class="bg-gray-100 min-h-screen p-4">
+<div class="max-w-sm mx-auto text-center space-y-6">
+    <h1 class="text-4xl font-bold text-gray-800">Tic Tac Toe</h1>
+    <h2 id="gameId" class="text-xl font-semibold text-blue-600"></h2>
 
-    <div class="space-y-2">
+    <div class="space-y-4">
         <input id="gameIdInput" type="text" placeholder="Enter game ID or leave blank for new"
-               class="border px-3 py-2 rounded w-64" />
+               class="border-2 px-4 py-3 rounded-lg w-full text-lg" />
         <button id="connectBtn"
-                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Connect</button>
+                class="bg-green-500 text-white px-6 py-4 rounded-lg hover:bg-green-600 w-full text-xl font-semibold">Connect</button>
     </div>
 
-    <div id="board" class="grid grid-cols-3 gap-2 w-64 mx-auto mt-4">
+    <div id="board" class="grid grid-cols-3 gap-3 w-full max-w-xs mx-auto mt-6">
         <!-- Cells populated via JS -->
     </div>
-    <div id="status" class="text-lg font-semibold text-gray-700">Waiting to join game...</div>
-    <button id="reset" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 hidden">
+    <div id="status" class="text-xl font-semibold text-gray-700 px-2">Waiting to join game...</div>
+    <button id="reset" class="mt-6 bg-blue-500 text-white px-6 py-4 rounded-lg hover:bg-blue-600 hidden w-full text-xl font-semibold">
         Start Game
     </button>
 </div>
@@ -108,8 +108,7 @@
         board.innerHTML = "";
         cells.forEach((value, i) => {
             const cell = document.createElement("div");
-            cell.className =
-                "bg-white w-20 h-20 flex items-center justify-center text-2xl font-bold rounded shadow cursor-pointer hover:bg-gray-100";
+            cell.className = "bg-white aspect-square flex items-center justify-center text-4xl font-bold rounded-lg shadow-md cursor-pointer hover:bg-gray-100 active:bg-gray-200 min-h-24 border-2 border-gray-200";
             cell.textContent = value === "-" ? "" : value;
             cell.onclick = () => handleClick(i);
             board.appendChild(cell);
