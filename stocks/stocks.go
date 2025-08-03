@@ -1,6 +1,7 @@
 package stocks
 
 import (
+	"broker/engine"
 	"context"
 	"errors"
 	"fmt"
@@ -33,7 +34,7 @@ func NewPolygonService(apiKey string) *PolygonService {
 	}
 }
 
-func (ps *PolygonService) StartWebsocket() {
+func (ps *PolygonService) StartWebsocket(e *engine.Engine) {
 	if err := ps.wsClient.Connect(); err != nil {
 		panic(err)
 		return
@@ -84,13 +85,13 @@ func (ps *PolygonService) StartWebsocket() {
 				if !allowedPairs[trade.Pair] {
 					continue
 				}
-				log.Printf("%v", trade.Price)
+				e.Broadcast(fmt.Sprintf("[crypto][%v,%v]", trade.Pair, trade.Price))
 			case wsModels.CurrencyAgg:
 				agg := out.(wsModels.CurrencyAgg)
 				if !allowedPairs[agg.Pair] {
 					continue
 				}
-				log.Printf("%v", agg.Close)
+				e.Broadcast(fmt.Sprintf("[crypto][%v,%v]", agg.Pair, agg.Close))
 			}
 		}
 	}

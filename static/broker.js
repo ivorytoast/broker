@@ -17,7 +17,6 @@ export function initBrokerJavascript(wsUrl = null) {
     };
 
     ws.onmessage = (e) => {
-        console.log("from server:", e.data);
         const matches = e.data.match(/\[([^\]]+)\]/g);
 
         if (matches && matches.length >= 2) {

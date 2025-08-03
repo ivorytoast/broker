@@ -46,7 +46,6 @@ func main() {
 	}
 
 	polygonClient = stocks.NewPolygonService(polygonApi)
-	go polygonClient.StartWebsocket()
 
 	eventMap := map[string]engine.EventFunction{
 		"stock_price": stockPriceHandler,
@@ -62,17 +61,14 @@ func main() {
 	}
 	cronFunctions := []engine.CronFunctionContainer{
 		{
-			Name:   "Watchlist",
-			Cron:   runWatchlist,
-			Ticker: time.NewTicker(2 * time.Second),
-		},
-		{
 			Name:   "Connections",
 			Cron:   runGetConnections,
 			Ticker: time.NewTicker(2 * time.Second),
 		},
 	}
 	e := engine.New(staticFiles, eventMap, endpointMap, cronFunctions, brokerEnv)
+
+	// go polygonClient.StartWebsocket(e)
 
 	err := e.StartServer()
 	if err != nil {
@@ -129,24 +125,6 @@ func runGetConnections(ticker *time.Ticker, e *engine.Engine) {
 			fmt.Println("Broadcasting:", response)
 			e.Broadcast(response)
 		}
-	}
-}
-
-func runWatchlist(ticker *time.Ticker, e *engine.Engine) {
-	symbols := []string{"AAPL", "MSFT", "GOOG", "TSLA"}
-	i := 0
-	for range ticker.C {
-		symbol := symbols[i%len(symbols)]
-		msg := fmt.Sprintf("[watchlist][%s]", symbol)
-
-		response, err := e.ProcessMessage(msg)
-		if err != nil {
-			fmt.Println("Error:", err)
-		} else {
-			fmt.Println("Broadcasting:", response)
-			e.Broadcast(response)
-		}
-		i++
 	}
 }
 
