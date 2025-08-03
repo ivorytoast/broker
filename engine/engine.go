@@ -8,27 +8,36 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 type EventFunction func(*Engine, string) (string, error)
-
-type Engine struct {
-	staticFiles embed.FS
-	eventMap    map[string]EventFunction
-	endpointMap map[string]string
-	upgrader    websocket.Upgrader
-	clients     map[*websocket.Conn]string
-	env         string
+type CronFunction func(ticker *time.Ticker, e *Engine)
+type CronFunctionContainer struct {
+	Name   string
+	Cron   CronFunction
+	Ticker *time.Ticker
 }
 
-func New(staticFiles embed.FS, eventMap map[string]EventFunction, endpointMap map[string]string, env string) *Engine {
+type Engine struct {
+	staticFiles   embed.FS
+	eventMap      map[string]EventFunction
+	endpointMap   map[string]string
+	cronFunctions []CronFunctionContainer
+	upgrader      websocket.Upgrader
+	clients       map[*websocket.Conn]string
+	env           string
+}
+
+func New(staticFiles embed.FS, eventMap map[string]EventFunction, endpointMap map[string]string, cronFunctions []CronFunctionContainer, env string) *Engine {
 	return &Engine{
-		staticFiles: staticFiles,
-		eventMap:    eventMap,
-		endpointMap: endpointMap,
-		clients:     make(map[*websocket.Conn]string),
+		staticFiles:   staticFiles,
+		eventMap:      eventMap,
+		endpointMap:   endpointMap,
+		cronFunctions: cronFunctions,
+		clients:       make(map[*websocket.Conn]string),
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
@@ -124,6 +133,15 @@ func (e *Engine) Broadcast(msg string) {
 }
 
 func (e *Engine) StartServer() error {
+	for _, container := range e.cronFunctions {
+		println("starting function: " + container.Name)
+
+		go func(c CronFunctionContainer) {
+			defer c.Ticker.Stop()
+			c.Cron(c.Ticker, e)
+		}(container)
+	}
+
 	mux := http.NewServeMux()
 	staticFS, err := fs.Sub(e.staticFiles, ".")
 	if err != nil {

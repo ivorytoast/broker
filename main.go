@@ -45,11 +45,6 @@ func main() {
 
 	InitPolygonClient(polygonApi)
 
-	ticker := time.NewTicker(2 * time.Second)
-	connections := time.NewTicker(2 * time.Second)
-	defer ticker.Stop()
-	defer connections.Stop()
-
 	eventMap := map[string]engine.EventFunction{
 		"stock_price": stockPriceHandler,
 		"watchlist":   watchListHandler,
@@ -62,10 +57,19 @@ func main() {
 		"/dashboard": "html/dashboard.html",
 		"/blackjack": "html/blackjack.html",
 	}
-	e := engine.New(staticFiles, eventMap, endpointMap, brokerEnv)
-
-	go runWatchlist(ticker, e)
-	go runGetConnections(connections, e)
+	cronFunctions := []engine.CronFunctionContainer{
+		{
+			Name:   "Watchlist",
+			Cron:   runWatchlist,
+			Ticker: time.NewTicker(2 * time.Second),
+		},
+		{
+			Name:   "Connections",
+			Cron:   runGetConnections,
+			Ticker: time.NewTicker(2 * time.Second),
+		},
+	}
+	e := engine.New(staticFiles, eventMap, endpointMap, cronFunctions, brokerEnv)
 
 	err := e.StartServer()
 	if err != nil {
@@ -173,30 +177,25 @@ func loadEnvFile(path string) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-
-		// Skip empty lines or comments
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 
-		// Split key=value
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
-			continue // or handle error
+			continue
 		}
 
 		key := strings.TrimSpace(parts[0])
 		value := strings.TrimSpace(parts[1])
 
-		// Remove optional surrounding quotes (single or double)
 		if len(value) >= 2 {
 			if (value[0] == '"' && value[len(value)-1] == '"') ||
 				(value[0] == '\'' && value[len(value)-1] == '\'') {
 				value = value[1 : len(value)-1]
 			}
 		}
-
-		// Set env variable
+		
 		os.Setenv(key, value)
 	}
 
