@@ -17,8 +17,9 @@ import (
 var staticFiles embed.FS
 
 var (
-	games   = make(map[string]*tictactoe.Game)
-	gameMux sync.Mutex
+	games         = make(map[string]*tictactoe.Game)
+	gameMux       sync.Mutex
+	polygonClient *PolygonService
 )
 
 func main() {
@@ -43,7 +44,7 @@ func main() {
 		panic("BROKER_ENV and POLYGON_API is required")
 	}
 
-	InitPolygonClient(polygonApi)
+	polygonClient = NewPolygonService(polygonApi)
 
 	eventMap := map[string]engine.EventFunction{
 		"stock_price": stockPriceHandler,
@@ -152,7 +153,7 @@ func connectionsHandler(e *engine.Engine, connections string) (string, error) {
 }
 
 func watchListHandler(e *engine.Engine, symbol string) (string, error) {
-	res, err := runPolygonRequest(symbol)
+	res, err := polygonClient.RunRequest(symbol)
 	if err != nil {
 		return "", err
 	}
@@ -160,7 +161,7 @@ func watchListHandler(e *engine.Engine, symbol string) (string, error) {
 }
 
 func stockPriceHandler(e *engine.Engine, symbol string) (string, error) {
-	res, err := runPolygonRequest(symbol)
+	res, err := polygonClient.RunRequest(symbol)
 	if err != nil {
 		return "", err
 	}
@@ -195,7 +196,6 @@ func loadEnvFile(path string) error {
 				value = value[1 : len(value)-1]
 			}
 		}
-		
 		os.Setenv(key, value)
 	}
 

@@ -4,22 +4,25 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	polygon "github.com/polygon-io/client-go/rest"
-	"github.com/polygon-io/client-go/rest/models"
 	"log"
 	"time"
+
+	polygon "github.com/polygon-io/client-go/rest"
+	"github.com/polygon-io/client-go/rest/models"
 )
 
-var (
-	polygonClient *polygon.Client
-)
-
-func InitPolygonClient(apiKey string) {
-	polygonClient = polygon.New(apiKey)
+type PolygonService struct {
+	client *polygon.Client
 }
 
-func runPolygonRequest(symbol string) (*models.GetDailyOpenCloseAggResponse, error) {
-	if polygonClient == nil {
+func NewPolygonService(apiKey string) *PolygonService {
+	return &PolygonService{
+		client: polygon.New(apiKey),
+	}
+}
+
+func (ps *PolygonService) RunRequest(symbol string) (*models.GetDailyOpenCloseAggResponse, error) {
+	if ps.client == nil {
 		return nil, fmt.Errorf("polygon client not initialized")
 	}
 
@@ -30,7 +33,7 @@ func runPolygonRequest(symbol string) (*models.GetDailyOpenCloseAggResponse, err
 		Date:   models.Date(on),
 	}.WithAdjusted(true)
 
-	res, err := polygonClient.GetDailyOpenCloseAgg(context.Background(), params)
+	res, err := ps.client.GetDailyOpenCloseAgg(context.Background(), params)
 	if err != nil {
 		fmt.Println(err)
 		var errResp *models.ErrorResponse
