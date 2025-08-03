@@ -1,6 +1,9 @@
 .idea/
 node_modules/
 
-deploy.sh
-logs.sh
 broker_linux
+
+scripts/
+secrets/
+certs/
+etc/

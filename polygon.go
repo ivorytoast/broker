@@ -15,7 +15,6 @@ var (
 )
 
 func InitPolygonClient(apiKey string) {
-	polygonApiKey = apiKey
 	polygonClient = polygon.New(apiKey)
 }
 

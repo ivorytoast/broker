@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Blackjack Extended</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-green-800 text-white h-screen w-screen overflow-hidden relative">
+
+<!-- Center Cards -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-end space-x-[-2.5rem] sm:space-x-[-1rem]">
+    <!-- Older card 1 (smallest) -->
+    <div class="w-[25vw] h-[37.5vw] sm:w-24 sm:h-36 bg-white text-black rounded-md shadow-lg flex items-center justify-center text-2xl font-bold z-10">
+        5♣
+    </div>
+
+    <!-- Older card 2 (medium) -->
+    <div class="w-[30vw] h-[45vw] sm:w-28 sm:h-40 bg-white text-black rounded-md shadow-lg flex items-center justify-center text-3xl font-bold z-20">
+        Q♦
+    </div>
+
+    <!-- Latest card (largest, highlighted) -->
+    <div class="w-[40vw] h-[60vw] sm:w-40 sm:h-60 bg-white text-black rounded-md shadow-lg flex items-center justify-center text-4xl font-bold z-30 glow-card">
+        A♠
+    </div>
+
+    <!-- Pile counter -->
+    <div class="ml-6 text-center z-40">
+        <div class="bg-black/50 px-3 py-2 rounded-lg text-xl font-semibold">
+            Pile: 21
+        </div>
+    </div>
+</div>
+
+<!-- Players -->
+<div id="player-top-left" class="absolute top-4 left-4 w-32 sm:w-36 h-20 sm:h-24 p-2 bg-black/40 rounded-lg text-center ring-4 ring-transparent">
+    Player 1<br />
+    <span class="text-sm text-yellow-300">Cards: 7</span>
+</div>
+
+<div id="player-top-right" class="absolute top-4 right-4 w-32 sm:w-36 h-20 sm:h-24 p-2 bg-black/40 rounded-lg text-center ring-4 ring-transparent">
+    Player 2<br />
+    <span class="text-sm text-yellow-300">Cards: 6</span>
+</div>
+
+<div id="player-bottom-left" class="absolute bottom-4 left-4 w-32 sm:w-36 h-20 sm:h-24 p-2 bg-black/40 rounded-lg text-center ring-4 ring-transparent">
+    Player 3<br />
+    <span class="text-sm text-yellow-300">Cards: 3</span>
+</div>
+
+<div id="player-bottom-right" class="absolute bottom-4 right-4 w-32 sm:w-36 h-20 sm:h-24 p-2 bg-black/40 rounded-lg text-center ring-4 ring-yellow-400">
+    Player 4<br />
+    <span class="text-sm text-yellow-300">Cards: 9</span>
+</div>
+
+</body>
+</html>
