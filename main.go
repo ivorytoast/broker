@@ -6,16 +6,14 @@ import (
 	"bufio"
 	"embed"
 	"fmt"
-	"io/fs"
-	"log"
-	"net/http"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
 )
 
-//go:embed html/tic-tac-toe.html static/broker.js html/index-dashboard.html html/blackjack.html
+//go:embed html/tic-tac-toe.html static/broker.js html/dashboard.html html/blackjack.html
 var staticFiles embed.FS
 
 var (
@@ -24,10 +22,18 @@ var (
 )
 
 func main() {
-	err := loadEnvFile("secrets/secrets.env")
-	if err != nil {
-		fmt.Println("error loading env file:", err)
-		return
+	if runtime.GOOS == "linux" {
+		err := loadEnvFile("secrets/secrets.env")
+		if err != nil {
+			fmt.Println("error loading env file:", err)
+			return
+		}
+	} else {
+		err := loadEnvFile("secrets/dev-secrets.env")
+		if err != nil {
+			fmt.Println("error loading env file:", err)
+			return
+		}
 	}
 
 	brokerEnv := os.Getenv("BROKER_ENV")
@@ -51,77 +57,19 @@ func main() {
 		"start":       startHandler,
 		"move":        playerMoveHandler,
 	}
-	e := engine.New(eventMap)
+	endpointMap := map[string]string{
+		"/tictactoe": "html/tic-tac-toe.html",
+		"/dashboard": "html/dashboard.html",
+		"/blackjack": "html/blackjack.html",
+	}
+	e := engine.New(staticFiles, eventMap, endpointMap, brokerEnv)
 
 	go runWatchlist(ticker, e)
 	go runGetConnections(connections, e)
 
-	mux := http.NewServeMux()
-
-	staticFS, err := fs.Sub(staticFiles, ".")
+	err := e.StartServer()
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			w.Header().Set("Content-Type", "text/plain")
-			w.Write([]byte("Hello from backend!"))
-			return
-		}
-		if r.URL.Path == "/tictactoe" {
-			content, err := staticFiles.ReadFile("html/tic-tac-toe.html")
-			if err != nil {
-				http.Error(w, "Tic-tac-toe game not found", http.StatusNotFound)
-				return
-			}
-			w.Header().Set("Content-Type", "text/html")
-			w.Write(content)
-			return
-		}
-		http.FileServer(http.FS(staticFS)).ServeHTTP(w, r)
-	})
-
-	mux.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
-		content, err := staticFiles.ReadFile("html/index-dashboard.html")
-		if err != nil {
-			http.Error(w, "Dashboard not found", http.StatusNotFound)
-			return
-		}
-		w.Header().Set("Content-Type", "text/html")
-		w.Write(content)
-	})
-
-	mux.HandleFunc("/blackjack", func(w http.ResponseWriter, r *http.Request) {
-		content, err := staticFiles.ReadFile("html/blackjack.html")
-		if err != nil {
-			http.Error(w, "Blackjack not found", http.StatusNotFound)
-			return
-		}
-		w.Header().Set("Content-Type", "text/html")
-		w.Write(content)
-	})
-
-	mux.HandleFunc("/ws", e.Handler)
-
-	if brokerEnv == "dev" {
-		log.Printf("Starting LOCAL server on :8080")
-		if err := http.ListenAndServe(":8080", mux); err != nil {
-			log.Fatal("HTTP server error: ", err)
-		}
-	} else if brokerEnv == "prod" {
-		log.Printf("Starting PROD server with HTTPS on :443")
-		log.Printf("Tic-tac-toe game: https://chalkedup.io:443/tictactoe")
-		log.Printf("Dashboard: https://chalkedup.io:443/dashboard")
-		log.Printf("WebSocket: wss://chalkedup.io:443/ws")
-		if err := http.ListenAndServeTLS(":443",
-			"/etc/letsencrypt/live/chalkedup.io/fullchain.pem",
-			"/etc/letsencrypt/live/chalkedup.io/privkey.pem",
-			mux); err != nil {
-			log.Fatal("HTTPS server error: ", err)
-		}
-	} else {
-		panic("not supported BROKER_ENV: [" + brokerEnv + "]")
+		panic(err)
 	}
 }
 

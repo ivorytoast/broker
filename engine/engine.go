@@ -1,7 +1,9 @@
 package engine
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"regexp"
@@ -13,18 +15,24 @@ import (
 type EventFunction func(*Engine, string) (string, error)
 
 type Engine struct {
-	eventMap map[string]EventFunction
-	upgrader websocket.Upgrader
-	clients  map[*websocket.Conn]string
+	staticFiles embed.FS
+	eventMap    map[string]EventFunction
+	endpointMap map[string]string
+	upgrader    websocket.Upgrader
+	clients     map[*websocket.Conn]string
+	env         string
 }
 
-func New(eventMap map[string]EventFunction) *Engine {
+func New(staticFiles embed.FS, eventMap map[string]EventFunction, endpointMap map[string]string, env string) *Engine {
 	return &Engine{
-		eventMap: eventMap,
-		clients:  make(map[*websocket.Conn]string),
+		staticFiles: staticFiles,
+		eventMap:    eventMap,
+		endpointMap: endpointMap,
+		clients:     make(map[*websocket.Conn]string),
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
+		env: env,
 	}
 }
 
@@ -115,8 +123,61 @@ func (e *Engine) Broadcast(msg string) {
 	}
 }
 
-func (e *Engine) Server(addr string) error {
-	http.HandleFunc("/", e.Handler)
-	log.Printf("WebSocket server listening on ws://%s\n", addr)
-	return http.ListenAndServe(addr, nil)
+func (e *Engine) StartServer() error {
+	mux := http.NewServeMux()
+	staticFS, err := fs.Sub(e.staticFiles, ".")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			w.Header().Set("Content-Type", "text/plain")
+			w.Write([]byte("System Is UP!"))
+			return
+		}
+		http.FileServer(http.FS(staticFS)).ServeHTTP(w, r)
+	})
+
+	for endpoint, htmlFile := range e.endpointMap {
+		println("setting up " + endpoint + " -> " + htmlFile)
+
+		// Rebind htmlFile so each closure gets its own copy
+		endpointCopy := endpoint
+		htmlFileCopy := htmlFile
+
+		mux.HandleFunc(endpointCopy, func(w http.ResponseWriter, r *http.Request) {
+			content, err := e.staticFiles.ReadFile(htmlFileCopy)
+			if err != nil {
+				http.Error(w, htmlFileCopy+" not found", http.StatusNotFound)
+				return
+			}
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(content)
+		})
+	}
+
+	mux.HandleFunc("/ws", e.Handler)
+
+	if e.env == "dev" {
+		log.Printf("Starting LOCAL server on :8080")
+		if err := http.ListenAndServe(":8080", mux); err != nil {
+			log.Fatal("HTTP server error: ", err)
+		}
+	} else if e.env == "prod" {
+		log.Printf("Starting PROD server with HTTPS on :443")
+		log.Printf("Tic-tac-toe game: https://chalkedup.io:443/tictactoe")
+		log.Printf("Dashboard: https://chalkedup.io:443/dashboard")
+		log.Printf("WebSocket: wss://chalkedup.io:443/ws")
+		if err := http.ListenAndServeTLS(":443",
+			"/etc/letsencrypt/live/chalkedup.io/fullchain.pem",
+			"/etc/letsencrypt/live/chalkedup.io/privkey.pem",
+			mux); err != nil {
+			log.Fatal("HTTPS server error: ", err)
+		}
+	} else {
+		panic("not supported BROKER_ENV: [" + e.env + "]")
+	}
+
+	return nil
 }
