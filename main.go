@@ -2,6 +2,7 @@ package main
 
 import (
 	"broker/engine"
+	"broker/stocks"
 	"broker/tictactoe"
 	"bufio"
 	"embed"
@@ -19,7 +20,7 @@ var staticFiles embed.FS
 var (
 	games         = make(map[string]*tictactoe.Game)
 	gameMux       sync.Mutex
-	polygonClient *PolygonService
+	polygonClient *stocks.PolygonService
 )
 
 func main() {
@@ -44,7 +45,7 @@ func main() {
 		panic("BROKER_ENV and POLYGON_API is required")
 	}
 
-	polygonClient = NewPolygonService(polygonApi)
+	polygonClient = stocks.NewPolygonService(polygonApi)
 
 	eventMap := map[string]engine.EventFunction{
 		"stock_price": stockPriceHandler,
