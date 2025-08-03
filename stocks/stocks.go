@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	polygonws "github.com/polygon-io/client-go/websocket"
+	wsModels "github.com/polygon-io/client-go/websocket/models"
 	"log"
 	"time"
 
@@ -12,12 +14,85 @@ import (
 )
 
 type PolygonService struct {
-	client *polygon.Client
+	client   *polygon.Client
+	wsClient *polygonws.Client
 }
 
 func NewPolygonService(apiKey string) *PolygonService {
+	polygonWsClient, err := polygonws.New(polygonws.Config{
+		APIKey: apiKey,
+		Feed:   polygonws.RealTime,
+		Market: polygonws.Crypto,
+	})
+	if err != nil {
+		panic(err)
+	}
 	return &PolygonService{
-		client: polygon.New(apiKey),
+		client:   polygon.New(apiKey),
+		wsClient: polygonWsClient,
+	}
+}
+
+func (ps *PolygonService) StartWebsocket() {
+	if err := ps.wsClient.Connect(); err != nil {
+		panic(err)
+		return
+	}
+
+	if err := ps.wsClient.Subscribe(polygonws.CryptoSecAggs); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := ps.wsClient.Subscribe(polygonws.CryptoTrades); err != nil {
+		log.Fatal(err)
+	}
+
+	var allowedPairs = map[string]bool{
+		"BTC-USD":    true,
+		"ETH-USD":    true,
+		"XRP-USD":    true,
+		"SOL-USD":    true,
+		"OMNI-USD":   true,
+		"CRV-USD":    true,
+		"USDT-USD":   true,
+		"SUI-USD":    true,
+		"GNO-USD":    true,
+		"LTC-USD":    true,
+		"VET-USD":    true,
+		"MORPHO-USD": true,
+		"XCN-USD":    true,
+		"RSR-USD":    true,
+		"CVX-USD":    true,
+		"ADA-USD":    true,
+		"METIS-USD":  true,
+		"PEPE-USD":   true,
+		"MDT-USD":    true,
+	}
+
+	for {
+		select {
+		case err := <-ps.wsClient.Error():
+			log.Fatal(err)
+		case out, more := <-ps.wsClient.Output():
+			if !more {
+				return
+			}
+
+			switch out.(type) {
+			case wsModels.CryptoTrade:
+				trade := out.(wsModels.CryptoTrade)
+				if !allowedPairs[trade.Pair] {
+					continue
+				}
+				log.Printf("%v", trade.Price)
+			case wsModels.CurrencyAgg:
+				agg := out.(wsModels.CurrencyAgg)
+				if !allowedPairs[agg.Pair] {
+					continue
+				}
+				log.Printf("%v", agg.Close)
+			}
+		}
 	}
 }
 

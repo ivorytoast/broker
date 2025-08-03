@@ -46,6 +46,7 @@ func main() {
 	}
 
 	polygonClient = stocks.NewPolygonService(polygonApi)
+	go polygonClient.StartWebsocket()
 
 	eventMap := map[string]engine.EventFunction{
 		"stock_price": stockPriceHandler,
