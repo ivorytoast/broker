@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+</head>
+<body>
+
+<h1>Broker Dashboard</h1>
+<button id="buttonHit">Send it!</button>
+<p id="buttonHitText">...</p>
+<p id="connectionId">ID???</p>
+
+<script type="module">
+    import { initBrokerJavascript } from "./static/broker.js";
+    const broker = initBrokerJavascript();
+
+    const connectionId = document.getElementById("connectionId");
+    const buttonHitText = document.getElementById("buttonHitText");
+    const buttonHit = document.getElementById("buttonHit");
+    buttonHit.addEventListener("click", () => {
+        broker.send("broker", "tony");
+    });
+
+    broker.onMessage("broker", (topic, payload) => {
+        console.log("broker update:", payload);
+        buttonHitText.innerText = payload;
+    });
+
+    broker.onMessage("broker_id", (topic, payload) => {
+        console.log("connection updated:", payload);
+        connectionId.innerText = payload;
+    })
+</script>
+</body>
+</html>

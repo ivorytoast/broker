@@ -100,8 +100,11 @@ func (e *Engine) Handler(w http.ResponseWriter, r *http.Request) {
 	e.clients[conn] = clientID
 	defer delete(e.clients, conn)
 
+	e.Broadcast("[broker][client_added]")
+
 	log.Println("Client connected:", clientID)
-	conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("hello from %s", clientID)))
+
+	conn.WriteMessage(1, []byte(fmt.Sprintf("[broker_id][%s]", clientID)))
 
 	for {
 		mt, msg, err := conn.ReadMessage()

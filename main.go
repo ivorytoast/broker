@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-//go:embed html/tic-tac-toe.html static/broker.js html/dashboard.html html/blackjack.html
+//go:embed static/broker.js html/*
 var staticFiles embed.FS
 
 var (
@@ -53,11 +53,13 @@ func main() {
 		"connections": connectionsHandler,
 		"start":       startHandler,
 		"move":        playerMoveHandler,
+		"broker":      brokerHandler,
 	}
 	endpointMap := map[string]string{
 		"/tictactoe": "html/tic-tac-toe.html",
 		"/dashboard": "html/dashboard.html",
 		"/blackjack": "html/blackjack.html",
+		"/broker":    "html/broker.html",
 	}
 	cronFunctions := []engine.CronFunctionContainer{
 		{
@@ -89,6 +91,11 @@ func startHandler(e *engine.Engine, gameID string) (string, error) {
 	return game.ResetGame(e), nil
 }
 
+func brokerHandler(e *engine.Engine, input string) (string, error) {
+	println("hit broker handler")
+	return "hi from broker handler. you gave me: " + input, nil
+}
+
 func playerMoveHandler(e *engine.Engine, moveInput string) (string, error) {
 	println("got move: " + moveInput)
 	elements := strings.Split(moveInput, ",")
@@ -116,6 +123,9 @@ func runGetConnections(ticker *time.Ticker, e *engine.Engine) {
 		}
 
 		connStr := strings.Join(connList, ", ")
+		if connStr == "" {
+			connStr = "<no conn>"
+		}
 		msg := fmt.Sprintf("[connections][%s]", connStr)
 
 		response, err := e.ProcessMessage(msg)
