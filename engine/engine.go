@@ -22,6 +22,7 @@ type CronFunctionContainer struct {
 }
 
 type Engine struct {
+	frontendFiles embed.FS
 	staticFiles   embed.FS
 	eventMap      map[string]EventFunction
 	endpointMap   map[string]string
@@ -31,8 +32,9 @@ type Engine struct {
 	env           string
 }
 
-func New(staticFiles embed.FS, eventMap map[string]EventFunction, endpointMap map[string]string, cronFunctions []CronFunctionContainer, env string) *Engine {
+func New(frontendFiles embed.FS, staticFiles embed.FS, eventMap map[string]EventFunction, endpointMap map[string]string, cronFunctions []CronFunctionContainer, env string) *Engine {
 	return &Engine{
+		frontendFiles: frontendFiles,
 		staticFiles:   staticFiles,
 		eventMap:      eventMap,
 		endpointMap:   endpointMap,
@@ -146,19 +148,29 @@ func (e *Engine) StartServer() error {
 	}
 
 	mux := http.NewServeMux()
-	staticFS, err := fs.Sub(e.staticFiles, ".")
+	//staticFS, err := fs.Sub(e.staticFiles, ".")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	frontendFS, err := fs.Sub(e.frontendFiles, "frontend/dist")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			w.Header().Set("Content-Type", "text/plain")
-			w.Write([]byte("System Is UP!"))
-			return
-		}
-		http.FileServer(http.FS(staticFS)).ServeHTTP(w, r)
-	})
+	//_ = http.FileServer(http.FS(frontendFS))
+	//_ = http.FileServer(http.FS(staticFS))
+
+	mux.Handle("/", http.FileServer(http.FS(frontendFS)))
+
+	//mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	//	if r.URL.Path == "/" {
+	//		w.Header().Set("Content-Type", "text/plain")
+	//		w.Write([]byte("System Is UP!"))
+	//		return
+	//	}
+	//	frontendFileServer.ServeHTTP(w, r)
+	//})
 
 	for endpoint, htmlFile := range e.endpointMap {
 		println("setting up " + endpoint + " -> " + htmlFile)

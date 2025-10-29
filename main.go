@@ -17,6 +17,9 @@ import (
 //go:embed static/broker.js html/*
 var staticFiles embed.FS
 
+//go:embed frontend/dist/*
+var frontendFiles embed.FS
+
 var (
 	games         = make(map[string]*tictactoe.Game)
 	gameMux       sync.Mutex
@@ -68,7 +71,7 @@ func main() {
 			Ticker: time.NewTicker(2 * time.Second),
 		},
 	}
-	e := engine.New(staticFiles, eventMap, endpointMap, cronFunctions, brokerEnv)
+	e := engine.New(frontendFiles, staticFiles, eventMap, endpointMap, cronFunctions, brokerEnv)
 
 	// go polygonClient.StartWebsocket(e)
 

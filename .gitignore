@@ -7,3 +7,5 @@ scripts/
 secrets/
 certs/
 etc/
+
+frontend/.vscode

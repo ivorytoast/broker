@@ -1,0 +1,218 @@
+---
+// src/pages/index.astro
+const title = "🚀 Your Go + Astro App";
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{title}</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+		}
+
+		.container {
+			background: white;
+			border-radius: 20px;
+			padding: 40px;
+			max-width: 500px;
+			width: 100%;
+			box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+		}
+
+		h1 {
+			color: #667eea;
+			margin-bottom: 10px;
+			font-size: 2em;
+		}
+
+		.subtitle {
+			color: #666;
+			margin-bottom: 30px;
+		}
+
+		.counter-section {
+			background: #f7f7f7;
+			padding: 20px;
+			border-radius: 10px;
+			margin-bottom: 20px;
+			text-align: center;
+		}
+
+		.count {
+			font-size: 3em;
+			font-weight: bold;
+			color: #667eea;
+			margin: 20px 0;
+		}
+
+		.buttons {
+			display: flex;
+			gap: 10px;
+			justify-content: center;
+		}
+
+		button {
+			background: #667eea;
+			color: white;
+			border: none;
+			padding: 12px 24px;
+			border-radius: 8px;
+			font-size: 1em;
+			cursor: pointer;
+			transition: all 0.3s ease;
+		}
+
+		button:hover {
+			background: #764ba2;
+			transform: translateY(-2px);
+			box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+		}
+
+		button:active {
+			transform: translateY(0);
+		}
+
+		.reset {
+			background: #e74c3c;
+		}
+
+		.reset:hover {
+			background: #c0392b;
+		}
+
+		.input-section {
+			margin-top: 20px;
+		}
+
+		input {
+			width: 100%;
+			padding: 12px;
+			border: 2px solid #ddd;
+			border-radius: 8px;
+			font-size: 1em;
+			margin-bottom: 10px;
+			transition: border-color 0.3s;
+		}
+
+		input:focus {
+			outline: none;
+			border-color: #667eea;
+		}
+
+		.greeting {
+			background: #667eea;
+			color: white;
+			padding: 15px;
+			border-radius: 8px;
+			margin-top: 10px;
+			text-align: center;
+			min-height: 50px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.status {
+			background: #2ecc71;
+			color: white;
+			padding: 10px;
+			border-radius: 8px;
+			text-align: center;
+			margin-top: 20px;
+			font-weight: bold;
+		}
+	</style>
+</head>
+<body>
+<div class="container">
+	<h1>{title}</h1>
+	<p class="subtitle">Everything is working perfectly!</p>
+
+	<div class="counter-section">
+		<p>Click Counter</p>
+		<div class="count" id="count">0</div>
+		<div class="buttons">
+			<button id="increment">➕ Add</button>
+			<button id="decrement">➖ Subtract</button>
+			<button class="reset" id="reset">🔄 Reset</button>
+		</div>
+	</div>
+
+	<div class="input-section">
+		<input
+			type="text"
+			id="nameInput"
+			placeholder="Enter your name..."
+		/>
+		<button id="greetBtn">👋 Say Hello</button>
+		<div class="greeting" id="greeting">
+			Type your name and click the button!
+		</div>
+	</div>
+
+	<div class="status">
+		✅ Go Backend + Astro Frontend = Success! (This was changed)
+	</div>
+</div>
+
+<script>
+	// Counter functionality
+	let count = 0;
+	const countEl = document.getElementById('count');
+	const incrementBtn = document.getElementById('increment');
+	const decrementBtn = document.getElementById('decrement');
+	const resetBtn = document.getElementById('reset');
+
+	incrementBtn.addEventListener('click', () => {
+		count++;
+		countEl.textContent = count;
+	});
+
+	decrementBtn.addEventListener('click', () => {
+		count--;
+		countEl.textContent = count;
+	});
+
+	resetBtn.addEventListener('click', () => {
+		count = 0;
+		countEl.textContent = count;
+	});
+
+	// Greeting functionality
+	const nameInput = document.getElementById('nameInput');
+	const greetBtn = document.getElementById('greetBtn');
+	const greetingEl = document.getElementById('greeting');
+
+	greetBtn.addEventListener('click', () => {
+		const name = nameInput.value.trim();
+		if (name) {
+			greetingEl.textContent = `Hello, ${name}! 🎉 Welcome to your app!`;
+		} else {
+			greetingEl.textContent = `Hey there! 👋 Please enter your name first!`;
+		}
+	});
+
+	nameInput.addEventListener('keypress', (e) => {
+		if (e.key === 'Enter') {
+			greetBtn.click();
+		}
+	});
+</script>
+</body>
+</html>
