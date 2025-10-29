@@ -14,93 +14,26 @@ const title = "Fund 78";
 		rel="stylesheet"
 	/>
 	<style>
-		:root {
-			--bg: #f7f7f7;
-			--border: #ddd;
-			--text: #111;
-			--subtle: #666;
-		}
-		html, body {
-			overflow-x: hidden;
-			width: 100%;
-			overscroll-behavior-y: none;
-		}
-		body {
-			margin: 0;
-			background: var(--bg);
-			font-family: "Inter", sans-serif;
-			color: var(--text);
-			display: flex;
-			min-height: 100vh;
-		}
-		/* Sidebar */
-		.sidebar {
-			width: 280px;
-			background: #fafafa;
-			border-right: 1px solid var(--border);
-			padding: 32px 20px;
-			display: flex;
-			flex-direction: column;
-			justify-content: space-between;
-		}
-		.sidebar h1 {
+		* {
 			font-family: "Playfair Display", serif;
-			font-size: 3.5rem;
-			line-height: 0.9;
-			font-weight: 700;
-			margin: 0 0 24px;
+			overscroll-behavior-x: none;
 		}
-		.sidebar p {
-			font-size: 0.95rem;
-			line-height: 1.5;
-			max-width: 200px;
-		}
-		.sidebar a {
-			color: inherit;
-			text-decoration: underline;
-		}
-		.footer {
-			font-size: 0.8rem;
-			color: var(--subtle);
-			display: flex;
-			flex-direction: column;
-			gap: 10px;
-		}
-		/* Main content */
-		.main {
-			flex: 1;
-			padding: 64px 80px;
-		}
-		@media (max-width: 900px) {
-			body {
-				flex-direction: column;
-			}
-			.sidebar {
-				width: 100%;
-				border-right: none;
-				border-bottom: 1px solid var(--border);
-				padding: 12px 20px;
-			}
-			.main {
-				padding: 20px 12px;
-			}
+
+		.centered {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
 		}
 	</style>
 </head>
 <body>
-<aside class="sidebar">
-	<div>
-		<h1>Fund<br />78</h1>
-		<p>Finding The Story</p>
-	</div>
-	<div class="footer">
-		<div>
-			<span>@ 2025 - Present</span>
-		</div>
-	</div>
-</aside>
-<main class="main">
-	<!-- Your content goes here -->
-</main>
+<div class="centered">
+	<h1>Fund 78</h1>
+	<p>---</p>
+	<p>Hope wins</p>
+	<p>The story is there</p>
+	<p>The choice is yours</p>
+</div>
 </body>
 </html>
