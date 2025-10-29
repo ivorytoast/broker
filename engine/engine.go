@@ -187,12 +187,12 @@ func (e *Engine) StartServer() error {
 		}
 	} else if e.env == "prod" {
 		log.Printf("Starting PROD server with HTTPS on :443")
-		log.Printf("Tic-tac-toe game: https://chalkedup.io:443/tictactoe")
-		log.Printf("Dashboard: https://chalkedup.io:443/dashboard")
-		log.Printf("WebSocket: wss://chalkedup.io:443/ws")
+		log.Printf("Tic-tac-toe game: https://fund78.com:443/tictactoe")
+		log.Printf("Dashboard: https://fund78.com:443/dashboard")
+		log.Printf("WebSocket: wss://fund78.com:443/ws")
 		if err := http.ListenAndServeTLS(":443",
-			"/etc/letsencrypt/live/chalkedup.io/fullchain.pem",
-			"/etc/letsencrypt/live/chalkedup.io/privkey.pem",
+			"/etc/letsencrypt/live/fund78.com/fullchain.pem",
+			"/etc/letsencrypt/live/fund78.com/privkey.pem",
 			mux); err != nil {
 			log.Fatal("HTTPS server error: ", err)
 		}
